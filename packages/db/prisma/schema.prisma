@@ -13,17 +13,24 @@ datasource db {
 // ───────────── Tenancy ─────────────
 
 model Tenant {
-  id            String   @id @default(cuid(2))
-  slug          String   @unique
-  name          String
-  plan          Plan     @default(FREE)
-  dataRegion    String   @default("eu-central")
-  settings      Json     @default("{}")
-  retentionDays Int      @default(365)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                      String   @id @default(cuid(2))
+  slug                    String   @unique
+  name                    String
+  plan                    Plan     @default(FREE)
+  dataRegion              String   @default("eu-central")
+  settings                Json     @default("{}")
+  retentionDays           Int      @default(365)
+  /// Kill Switch: false → keine neuen Agent-Läufe, laufende werden abgebrochen
+  agentsEnabled           Boolean  @default(true)
+  /// Monatliches LLM-Budget in Cent (null = unbegrenzt)
+  agentMonthlyBudgetCents Int?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   memberships Membership[]
+  agents      AgentDefinition[]
+  agentRuns   AgentRun[]
+  usage       UsageRecord[]
   roles       Role[]
   invitations Invitation[]
   apiKeys     ApiKey[]
@@ -129,6 +136,117 @@ model AuditLog {
   @@index([tenantId, resource, resourceId])
 }
 
+// ───────────── Agents (Phase 2) ─────────────
+
+model AgentDefinition {
+  id              String   @id @default(cuid(2))
+  tenantId        String
+  key             String
+  name            String
+  description     String?
+  activeVersionId String?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versions AgentVersion[]
+
+  @@unique([tenantId, key])
+}
+
+/// Unveränderlich: Änderungen erzeugen eine neue Version.
+model AgentVersion {
+  id           String   @id @default(cuid(2))
+  tenantId     String
+  agentId      String
+  version      Int
+  systemPrompt String
+  model        String
+  effort       String   @default("medium")
+  tools        String[]
+  permissions  String[]
+  maxSteps     Int      @default(12)
+  maxTokens    Int      @default(16000)
+  /// Kostenlimit pro Lauf in Cent
+  budgetCents  Int      @default(100)
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  agent AgentDefinition @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  runs  AgentRun[]
+
+  @@unique([agentId, version])
+  @@index([tenantId])
+}
+
+model AgentRun {
+  id              String    @id @default(cuid(2))
+  tenantId        String
+  agentVersionId  String
+  triggeredByType ActorType
+  triggeredById   String
+  status          RunStatus @default(QUEUED)
+  input           Json
+  output          Json?
+  error           String?
+  /// Tatsächlich antwortendes Modell (kann bei Fallback abweichen)
+  servedModel     String?
+  inputTokens     Int       @default(0)
+  outputTokens    Int       @default(0)
+  costMicroCents  BigInt    @default(0)
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  tenant  Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  version AgentVersion @relation(fields: [agentVersionId], references: [id], onDelete: Restrict)
+  steps   AgentStep[]
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+}
+
+model AgentStep {
+  id             String     @id @default(cuid(2))
+  tenantId       String
+  runId          String
+  index          Int
+  type           StepType
+  toolKey        String?
+  input          Json?
+  output         Json?
+  riskClass      RiskClass?
+  status         StepStatus
+  model          String?
+  inputTokens    Int?
+  outputTokens   Int?
+  costMicroCents BigInt?
+  durationMs     Int?
+  createdAt      DateTime   @default(now())
+
+  run AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, index])
+  @@index([tenantId])
+}
+
+model UsageRecord {
+  id             String   @id @default(cuid(2))
+  tenantId       String
+  kind           String
+  model          String?
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  costMicroCents BigInt
+  refId          String?
+  createdAt      DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
 // ───────────── Identity (Better Auth) ─────────────
 // Feldnamen entsprechen dem Better-Auth-Kernschema.
 
@@ -230,6 +348,35 @@ enum ActorType {
   AGENT
   SYSTEM
   API_KEY
+}
+
+enum RiskClass {
+  READ
+  WRITE
+  EXTERNAL_COMMUNICATION
+  FINANCIAL
+  DESTRUCTIVE
+}
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  WAITING_APPROVAL
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum StepType {
+  LLM_CALL
+  TOOL_CALL
+  POLICY_DENIED
+}
+
+enum StepStatus {
+  SUCCEEDED
+  FAILED
+  DENIED
 }
 
 enum Outcome {

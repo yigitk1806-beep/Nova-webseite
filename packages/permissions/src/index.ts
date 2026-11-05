@@ -14,6 +14,9 @@ export const PERMISSIONS = [
   'role:manage',
   'audit:read',
   'apikey:manage',
+  'agent:read',
+  'agent:run',
+  'agent:manage',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -36,6 +39,9 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'role:manage': 'Rollen verwalten',
   'audit:read': 'Audit-Log ansehen',
   'apikey:manage': 'API-Schlüssel verwalten',
+  'agent:read': 'Agenten und Läufe ansehen',
+  'agent:run': 'Agenten ausführen',
+  'agent:manage': 'Agenten konfigurieren',
 };
 
 export type SystemRoleKey = 'owner' | 'admin' | 'member' | 'viewer';
@@ -64,13 +70,13 @@ export const SYSTEM_ROLES: readonly SystemRoleDefinition[] = [
     key: 'member',
     name: 'Mitglied',
     description: 'Arbeitet im Unternehmen, ohne Verwaltungsrechte',
-    permissions: ['tenant:read', 'member:read', 'role:read'],
+    permissions: ['tenant:read', 'member:read', 'role:read', 'agent:read', 'agent:run'],
   },
   {
     key: 'viewer',
     name: 'Betrachter',
     description: 'Nur Lesezugriff',
-    permissions: ['tenant:read', 'member:read', 'role:read'],
+    permissions: ['tenant:read', 'member:read', 'role:read', 'agent:read'],
   },
 ];
 
