@@ -64,14 +64,18 @@ describe('Tenant-Isolation (RLS)', () => {
       tx.membership.findMany({ where: { tenantId: tenantA.id } }),
     );
     expect(rows).toHaveLength(0);
-    const audit = await withTenant(tenantB.id, bob.id, (tx) => tx.auditLog.count({ where: { tenantId: tenantA.id } }));
+    const audit = await withTenant(tenantB.id, bob.id, (tx) =>
+      tx.auditLog.count({ where: { tenantId: tenantA.id } }),
+    );
     expect(audit).toBe(0);
   });
 
   it('Schreiben in fremden Tenant wird von der DB abgelehnt', async () => {
     await expect(
       withTenant(tenantB.id, bob.id, (tx) =>
-        tx.membership.create({ data: { tenantId: tenantA.id, userId: bob.id, roleId: SYSTEM_ROLE_IDS.owner } }),
+        tx.membership.create({
+          data: { tenantId: tenantA.id, userId: bob.id, roleId: SYSTEM_ROLE_IDS.owner },
+        }),
       ),
     ).rejects.toThrow();
   });
@@ -89,20 +93,35 @@ describe('Tenant-Isolation (RLS)', () => {
 describe('Einladungen & Rollen', () => {
   it('Einladung annehmen: falsche E-Mail und unbestätigte Adresse werden abgelehnt', async () => {
     const access = await resolveTenantAccess(alice.id, tenantA.slug);
-    const { token } = await inviteMember(access, { email: carol.email, roleId: SYSTEM_ROLE_IDS.viewer });
+    const { token } = await inviteMember(access, {
+      email: carol.email,
+      roleId: SYSTEM_ROLE_IDS.viewer,
+    });
 
-    await expect(acceptInvitation({ id: bob.id, email: bob.email, emailVerified: true }, token, meta)).rejects.toBeInstanceOf(ForbiddenError);
-    await expect(acceptInvitation({ id: carol.id, email: carol.email, emailVerified: false }, token, meta)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      acceptInvitation({ id: bob.id, email: bob.email, emailVerified: true }, token, meta),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      acceptInvitation({ id: carol.id, email: carol.email, emailVerified: false }, token, meta),
+    ).rejects.toBeInstanceOf(ForbiddenError);
 
-    const tenant = await acceptInvitation({ id: carol.id, email: carol.email, emailVerified: true }, token, meta);
+    const tenant = await acceptInvitation(
+      { id: carol.id, email: carol.email, emailVerified: true },
+      token,
+      meta,
+    );
     expect(tenant.id).toBe(tenantA.id);
-    await expect(acceptInvitation({ id: carol.id, email: carol.email, emailVerified: true }, token, meta)).rejects.toBeInstanceOf(ConflictError);
+    await expect(
+      acceptInvitation({ id: carol.id, email: carol.email, emailVerified: true }, token, meta),
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 
   it('Viewer darf nicht einladen – Versuch wird als DENIED protokolliert', async () => {
     const carolAccess = await resolveTenantAccess(carol.id, tenantA.slug);
     expect(carolAccess.roleKey).toBe('viewer');
-    await expect(inviteMember(carolAccess, { email: 'x@example.test', roleId: SYSTEM_ROLE_IDS.viewer })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      inviteMember(carolAccess, { email: 'x@example.test', roleId: SYSTEM_ROLE_IDS.viewer }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
 
     const aliceAccess = await resolveTenantAccess(alice.id, tenantA.slug);
     const { items } = await queryAuditLog(aliceAccess, { action: 'member.invited' });
@@ -116,24 +135,39 @@ describe('Einladungen & Rollen', () => {
     await changeMemberRole(aliceAccess, { membershipId: carolM.id, roleId: SYSTEM_ROLE_IDS.admin });
 
     const carolAccess = await resolveTenantAccess(carol.id, tenantA.slug);
-    await expect(changeMemberRole(carolAccess, { membershipId: carolM.id, roleId: SYSTEM_ROLE_IDS.owner })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      changeMemberRole(carolAccess, { membershipId: carolM.id, roleId: SYSTEM_ROLE_IDS.owner }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
     const aliceM = members.find((m) => m.userId === alice.id)!;
     await expect(removeMember(carolAccess, aliceM.id)).rejects.toBeInstanceOf(ForbiddenError);
-    await expect(createRole(carolAccess, { key: 'super', name: 'Super', permissions: ['tenant:delete'] })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      createRole(carolAccess, { key: 'super', name: 'Super', permissions: ['tenant:delete'] }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('der letzte Inhaber kann nicht entfernt oder herabgestuft werden', async () => {
     const aliceAccess = await resolveTenantAccess(alice.id, tenantA.slug);
-    await expect(removeMember(aliceAccess, aliceAccess.membershipId)).rejects.toBeInstanceOf(ConflictError);
+    await expect(removeMember(aliceAccess, aliceAccess.membershipId)).rejects.toBeInstanceOf(
+      ConflictError,
+    );
     await expect(
-      changeMemberRole(aliceAccess, { membershipId: aliceAccess.membershipId, roleId: SYSTEM_ROLE_IDS.admin }),
+      changeMemberRole(aliceAccess, {
+        membershipId: aliceAccess.membershipId,
+        roleId: SYSTEM_ROLE_IDS.admin,
+      }),
     ).rejects.toBeInstanceOf(ConflictError);
   });
 
   it('eigene Rollen sind für andere Tenants unsichtbar', async () => {
     const aliceAccess = await resolveTenantAccess(alice.id, tenantA.slug);
-    const role = await createRole(aliceAccess, { key: 'buchhaltung', name: 'Buchhaltung', permissions: ['audit:read'] });
-    const visibleInB = await withTenant(tenantB.id, bob.id, (tx) => tx.role.findUnique({ where: { id: role.id } }));
+    const role = await createRole(aliceAccess, {
+      key: 'buchhaltung',
+      name: 'Buchhaltung',
+      permissions: ['audit:read'],
+    });
+    const visibleInB = await withTenant(tenantB.id, bob.id, (tx) =>
+      tx.role.findUnique({ where: { id: role.id } }),
+    );
     expect(visibleInB).toBeNull();
   });
 });
@@ -141,10 +175,14 @@ describe('Einladungen & Rollen', () => {
 describe('Audit', () => {
   it('App-Rolle kann Audit-Einträge weder ändern noch löschen', async () => {
     await expect(
-      withTenant(tenantA.id, alice.id, (tx) => tx.auditLog.updateMany({ where: { tenantId: tenantA.id }, data: { action: 'x' } })),
+      withTenant(tenantA.id, alice.id, (tx) =>
+        tx.auditLog.updateMany({ where: { tenantId: tenantA.id }, data: { action: 'x' } }),
+      ),
     ).rejects.toThrow();
     await expect(
-      withTenant(tenantA.id, alice.id, (tx) => tx.auditLog.deleteMany({ where: { tenantId: tenantA.id } })),
+      withTenant(tenantA.id, alice.id, (tx) =>
+        tx.auditLog.deleteMany({ where: { tenantId: tenantA.id } }),
+      ),
     ).rejects.toThrow();
   });
 
@@ -157,7 +195,10 @@ describe('Audit', () => {
     // Manipulation simulieren (nur als Eigentümer mit deaktiviertem Trigger möglich).
     await owner.$transaction(async (tx) => {
       await tx.$executeRawUnsafe('ALTER TABLE "AuditLog" DISABLE TRIGGER audit_log_immutable');
-      const first = await tx.auditLog.findFirstOrThrow({ where: { tenantId: tenantA.id }, orderBy: { id: 'asc' } });
+      const first = await tx.auditLog.findFirstOrThrow({
+        where: { tenantId: tenantA.id },
+        orderBy: { id: 'asc' },
+      });
       await tx.auditLog.update({ where: { id: first.id }, data: { action: 'tampered' } });
       await tx.$executeRawUnsafe('ALTER TABLE "AuditLog" ENABLE TRIGGER audit_log_immutable');
     });

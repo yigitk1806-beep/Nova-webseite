@@ -12,7 +12,10 @@ const serverEnvSchema = z
     REDIS_URL: z.url().optional(),
     BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET muss mindestens 32 Zeichen haben'),
     APP_URL: z.url(),
-    SMTP_URL: z.string().optional().transform((v) => (v ? v : undefined)),
+    SMTP_URL: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v : undefined)),
     MAIL_FROM: z.string().default('ONYX <no-reply@example.com>'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   })

@@ -3,3 +3,6 @@ packages/db/src/generated
 packages/db/prisma/migrations
 .next
 *.md
+.next
+.env
+next-env.d.ts

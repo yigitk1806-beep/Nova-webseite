@@ -27,7 +27,11 @@ export interface AuditEntry {
  * Muss in derselben Transaktion wie die fachliche Änderung laufen (atomar).
  * Ein Advisory-Lock pro Tenant serialisiert parallele Schreibvorgänge, damit die Kette nicht verzweigt.
  */
-export async function appendAudit(tx: ScopedTx, ctx: AuditContext, entry: AuditEntry): Promise<void> {
+export async function appendAudit(
+  tx: ScopedTx,
+  ctx: AuditContext,
+  entry: AuditEntry,
+): Promise<void> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${ctx.tenantId}, 0))`;
   const last = await tx.auditLog.findFirst({
     where: { tenantId: ctx.tenantId },
@@ -44,7 +48,9 @@ export async function appendAudit(tx: ScopedTx, ctx: AuditContext, entry: AuditE
     resourceId: entry.resourceId ?? null,
     outcome: entry.outcome ?? 'SUCCESS',
     // JSON-Roundtrip: exakt das, was jsonb speichert (z. B. Date → String)
-    metadata: JSON.parse(JSON.stringify(sanitizeMetadata(entry.metadata ?? {}))) as Prisma.InputJsonObject,
+    metadata: JSON.parse(
+      JSON.stringify(sanitizeMetadata(entry.metadata ?? {})),
+    ) as Prisma.InputJsonObject,
     requestId: ctx.requestId,
     ipHash: ctx.ipHash,
     createdAt: new Date(),
@@ -116,7 +122,9 @@ export async function listAudit(tx: ScopedTx, tenantId: string, q: AuditQuery = 
       tenantId,
       ...(q.action ? { action: { startsWith: q.action } } : {}),
       ...(q.actorId ? { actorId: q.actorId } : {}),
-      ...(q.from || q.to ? { createdAt: { ...(q.from ? { gte: q.from } : {}), ...(q.to ? { lte: q.to } : {}) } } : {}),
+      ...(q.from || q.to
+        ? { createdAt: { ...(q.from ? { gte: q.from } : {}), ...(q.to ? { lte: q.to } : {}) } }
+        : {}),
       ...(q.cursor !== undefined ? { id: { lt: q.cursor } } : {}),
     },
     orderBy: { id: 'desc' },

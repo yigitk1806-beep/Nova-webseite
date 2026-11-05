@@ -10,3 +10,4 @@ packages/db/src/generated/
 test-results/
 playwright-report/
 .DS_Store
+next-env.d.ts

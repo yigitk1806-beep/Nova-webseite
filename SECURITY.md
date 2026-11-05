@@ -51,7 +51,26 @@ Bitte Sicherheitslücken **nicht** als öffentliches Issue melden, sondern priva
 
 > Diese Punkte sind technische Leitplanken und ersetzen keine Rechtsberatung. Vor dem Produktivbetrieb ist eine Prüfung durch Datenschutzbeauftragte/Juristen erforderlich (inkl. DSFA nach Art. 35 für KI-gestützte Verarbeitung).
 
-## 6. Sicherheits-Checkliste pro Phase
+## 6. Umsetzungsstand Phase 1
+
+| Maßnahme | Status |
+|---|---|
+| RLS-Isolation, Nicht-Eigentümer-App-Rolle | ✅ umgesetzt, Integrationstests |
+| RBAC mit Eskalationsschutz, letzter Inhaber geschützt | ✅ umgesetzt, Integrationstests |
+| Audit append-only + Hash-Kette + DENIED-Protokollierung | ✅ umgesetzt, Integrationstests |
+| argon2id, E-Mail-Verifikation Pflicht, Passwort-Reset widerruft Sessions | ✅ |
+| Zod-Validierung aller Service-Eingaben, generische Fehlermeldungen mit Referenz-ID | ✅ |
+| Sicherheits-Header (HSTS, nosniff, X-Frame-Options, Referrer/Permissions-Policy) | ✅ |
+| Open-Redirect-Schutz (`next`-Parameter), Server-Action-Origin-Prüfung (Next.js) | ✅ |
+| Telemetrie von Better Auth und Next.js deaktiviert | ✅ |
+| Nonce-basierte CSP | ⏳ offen |
+| Rate Limiting: aktuell Better Auth im Arbeitsspeicher (pro Instanz) → Redis | ⏳ offen |
+| MFA (TOTP) für Inhaber/Admins | ⏳ offen, Pflicht vor Go-live |
+| Secret-Scanning und Dependency-Audit in der CI | ⏳ offen |
+
+Bekannte Datenverarbeitung: Better Auth speichert IP-Adresse und User-Agent in `Session` (Sicherheitszweck, Löschung mit Ablauf der Session). In `AuditLog` wird nur ein gesalzener Hash der IP gespeichert.
+
+## 7. Sicherheits-Checkliste pro Phase
 
 - [ ] Tenant-Isolationstests für jede neue Tabelle und jeden neuen Endpunkt
 - [ ] Permission-Matrix aktualisiert

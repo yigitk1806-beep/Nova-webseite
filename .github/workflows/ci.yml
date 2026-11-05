@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: onyx_owner
+          POSTGRES_PASSWORD: onyx_owner_ci
+          POSTGRES_DB: onyx
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U onyx_owner" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://onyx_app:onyx_app_ci@localhost:5432/onyx
+      MIGRATION_DATABASE_URL: postgresql://onyx_owner:onyx_owner_ci@localhost:5432/onyx
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create application DB role
+        run: |
+          PGPASSWORD=onyx_owner_ci psql -h localhost -U onyx_owner -d onyx -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE onyx_app LOGIN PASSWORD 'onyx_app_ci' NOSUPERUSER NOBYPASSRLS;" \
+            -c "GRANT CONNECT ON DATABASE onyx TO onyx_app;"
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - name: Check schema and migrations are in sync
+        working-directory: packages/db
+        run: pnpm prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build

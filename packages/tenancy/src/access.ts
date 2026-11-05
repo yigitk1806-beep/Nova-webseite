@@ -36,7 +36,10 @@ export async function resolveTenantAccess(
   meta: { requestId: string | null; ipHash: string | null } = { requestId: null, ipHash: null },
 ): Promise<TenantAccess> {
   const tenant = await withUser(userId, (tx) =>
-    tx.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true, slug: true, name: true } }),
+    tx.tenant.findUnique({
+      where: { slug: tenantSlug },
+      select: { id: true, slug: true, name: true },
+    }),
   );
   if (!tenant) throw new NotFoundError('Unternehmen nicht gefunden.');
 
@@ -46,7 +49,8 @@ export async function resolveTenantAccess(
       include: { role: { select: { id: true, key: true, permissions: true } } },
     }),
   );
-  if (!membership || membership.status !== 'ACTIVE') throw new NotFoundError('Unternehmen nicht gefunden.');
+  if (!membership || membership.status !== 'ACTIVE')
+    throw new NotFoundError('Unternehmen nicht gefunden.');
 
   return {
     tenantId: tenant.id,

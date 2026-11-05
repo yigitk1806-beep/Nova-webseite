@@ -1,11 +1,11 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 
 onlyBuiltDependencies:
-  - "@prisma/engines"
-  - "prisma"
-  - "@node-rs/argon2"
-  - "esbuild"
-  - "sharp"
-  - "@tailwindcss/oxide"
+  - '@prisma/engines'
+  - 'prisma'
+  - '@node-rs/argon2'
+  - 'esbuild'
+  - 'sharp'
+  - '@tailwindcss/oxide'

@@ -2,6 +2,7 @@
 
 > Status: Entwurf v0.1 · PostgreSQL 16+ · Prisma ORM
 > Das Schema wird schrittweise je Phase migriert. Phase 1 umfasst nur die mit **[P1]** markierten Modelle.
+> **Maßgeblich ist `packages/db/prisma/schema.prisma`.** Das Prisma-Schema unten ist der ursprüngliche Entwurf. Umgesetzt wurde in Phase 1 zusätzlich `Invitation` (Token nur als SHA-256-Hash). Die Better-Auth-Tabellen `User`, `Session`, `Account` und `Verification` folgen dem Better-Auth-Kernschema (z. B. `emailVerified Boolean`, Passwort-Hash in `Account.password`).
 
 ## 1. Konventionen
 
@@ -277,9 +278,15 @@ CREATE POLICY tenant_isolation ON "AgentRun"
   USING ("tenantId" = current_setting('app.tenant_id', true))
   WITH CHECK ("tenantId" = current_setting('app.tenant_id', true));
 ```
-Die App setzt `SET LOCAL app.tenant_id = $1` in jeder Transaktion (Prisma-Extension). Die App-DB-Rolle ist **kein** Superuser und **nicht** Tabelleneigentümer. Migrationen laufen mit einer separaten Rolle.
+Umsetzung (Migration `20261105090000_rls_and_grants`):
+- Die App setzt pro Transaktion `set_config('app.tenant_id', …, true)` und `set_config('app.user_id', …, true)` über `withTenant()` / `withUser()` in `packages/db`. Ohne Kontext liefert die DB keine fachlichen Zeilen.
+- Die App-Rolle `onyx_app` ist weder Superuser noch Tabelleneigentümer und hat `NOBYPASSRLS`. Migrationen laufen als Eigentümer. RLS ist `ENABLE`, nicht `FORCE` (siehe ADR-7).
+- `Membership` ist zusätzlich über `app.user_id` lesbar (Tenant-Auswahl). `Tenant` ist für aktive Mitglieder lesbar.
+- Systemrollen (`tenantId IS NULL`) sind lesbar, aber für die App nicht schreibbar.
+- Einladungen werden vor dem Tenant-Kontext über die `SECURITY DEFINER`-Funktion `onyx_invitation_lookup(token_hash)` gefunden. Sie liefert nur `id` und `tenantId`.
+- `_prisma_migrations` ist für die App gesperrt.
 
-`AuditLog`: Die App-Rolle erhält nur `INSERT` und `SELECT`, kein `UPDATE` und kein `DELETE`. Löschungen nach Ablauf der Aufbewahrungsfrist erledigt ein dedizierter Wartungsjob mit eigener Rolle.
+`AuditLog`: Die App-Rolle erhält nur `INSERT` und `SELECT`. Zusätzlich blockiert ein Trigger jedes `UPDATE` (auch für Eigentümer) und `DELETE`, außer im expliziten Retention-Modus (`SET onyx.audit_purge = 'on'`, nur für den späteren Wartungsjob). Hash-Kette: SHA-256 über den vorherigen Hash und alle Felder in kanonischer JSON-Form, serialisiert per `pg_advisory_xact_lock` pro Tenant.
 
 ## 5. DSGVO-Aspekte im Datenmodell
 

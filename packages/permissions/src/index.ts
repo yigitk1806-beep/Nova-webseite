@@ -100,9 +100,6 @@ export function canGrant(actorPermissions: readonly string[], target: readonly s
 }
 
 /** Effektive Rechte eines delegierten Akteurs (z. B. Agent im Auftrag eines Nutzers). */
-export function intersectPermissions(
-  a: readonly string[],
-  b: readonly string[],
-): Permission[] {
+export function intersectPermissions(a: readonly string[], b: readonly string[]): Permission[] {
   return toPermissions(a.filter((p) => b.includes(p)));
 }

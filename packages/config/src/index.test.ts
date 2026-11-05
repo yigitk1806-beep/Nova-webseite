@@ -12,7 +12,9 @@ describe('parseServerEnv', () => {
     expect(parseServerEnv(base).APP_URL).toBe('http://localhost:3000');
   });
   it('lehnt zu kurze Secrets ab', () => {
-    expect(() => parseServerEnv({ ...base, BETTER_AUTH_SECRET: 'kurz' })).toThrow(/BETTER_AUTH_SECRET/);
+    expect(() => parseServerEnv({ ...base, BETTER_AUTH_SECRET: 'kurz' })).toThrow(
+      /BETTER_AUTH_SECRET/,
+    );
   });
   it('verlangt SMTP in Produktion', () => {
     expect(() => parseServerEnv({ ...base, NODE_ENV: 'production' })).toThrow(/SMTP_URL/);

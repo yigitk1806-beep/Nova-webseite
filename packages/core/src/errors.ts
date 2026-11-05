@@ -27,7 +27,11 @@ export class OnyxError extends Error {
   readonly publicMessage: string;
   readonly details: Record<string, unknown> | undefined;
 
-  constructor(code: ErrorCode, publicMessage: string, options?: { cause?: unknown; internal?: string; details?: Record<string, unknown> }) {
+  constructor(
+    code: ErrorCode,
+    publicMessage: string,
+    options?: { cause?: unknown; internal?: string; details?: Record<string, unknown> },
+  ) {
     super(options?.internal ?? publicMessage, { cause: options?.cause });
     this.name = new.target.name;
     this.code = code;

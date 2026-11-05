@@ -49,7 +49,10 @@ export function sanitizeMetadata(meta: Record<string, unknown>): Record<string, 
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(meta)) {
     if (SENSITIVE_KEY.test(k)) continue;
-    out[k] = v !== null && typeof v === 'object' && !Array.isArray(v) ? sanitizeMetadata(v as Record<string, unknown>) : v;
+    out[k] =
+      v !== null && typeof v === 'object' && !Array.isArray(v)
+        ? sanitizeMetadata(v as Record<string, unknown>)
+        : v;
   }
   return out;
 }

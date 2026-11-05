@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { canGrant, hasPermission, intersectPermissions, SYSTEM_ROLES, toPermissions } from './index.ts';
+import {
+  canGrant,
+  hasPermission,
+  intersectPermissions,
+  SYSTEM_ROLES,
+  toPermissions,
+} from './index.ts';
 
 const role = (key: string) => SYSTEM_ROLES.find((r) => r.key === key)!.permissions;
 
@@ -20,6 +26,8 @@ describe('Permissions', () => {
     expect(toPermissions(['tenant:read', 'root:everything'])).toEqual(['tenant:read']);
   });
   it('Schnittmenge für delegierte Akteure', () => {
-    expect(intersectPermissions(['audit:read', 'member:invite'], ['audit:read'])).toEqual(['audit:read']);
+    expect(intersectPermissions(['audit:read', 'member:invite'], ['audit:read'])).toEqual([
+      'audit:read',
+    ]);
   });
 });

@@ -1,7 +1,7 @@
 # ONYX – Architektur
 
-> Status: Entwurf v0.1 (Audit & Zielarchitektur) · Stand: 2026-11-05
-> Noch nichts davon ist implementiert. Dieses Dokument beschreibt die **Zielarchitektur**.
+> Status: v0.2 · Stand: 2026-11-05
+> Phase 1 (Core, Tenancy, Auth, Permissions, Audit) ist implementiert. Die übrigen Module beschreiben die **Zielarchitektur**.
 
 ---
 
@@ -144,7 +144,11 @@ onyx/
 └── docker-compose.yml       # Postgres, Redis, n8n (lokal)
 ```
 
-Tooling: pnpm Workspaces + Turborepo, TypeScript `strict` (inkl. `noUncheckedIndexedAccess`), ESLint, Prettier, Vitest, Playwright.
+Tooling: pnpm Workspaces, TypeScript `strict` (inkl. `noUncheckedIndexedAccess`), ESLint, Prettier, Vitest. Turborepo wird ergänzt, sobald Build-Zeiten es rechtfertigen.
+
+**Umsetzungsstand Phase 1 (Abweichungen vom Ziel):**
+- UI-Primitives liegen vorerst in `apps/web/components/ui`. Sie wandern nach `packages/ui`, sobald eine zweite App sie nutzt.
+- `packages/agents`, `workflows`, `integrations`, `analytics` existieren noch nicht (Phasen 2–5).
 
 ---
 
@@ -182,4 +186,5 @@ Tooling: pnpm Workspaces + Turborepo, TypeScript `strict` (inkl. `noUncheckedInd
 | ADR-3 | BullMQ auf Redis als Queue | Bewährt, Retries/Backoff/Delays, passt zum Stack |
 | ADR-4 | Eigene Agent-Runtime auf Anthropic Messages API (Tool Use) | Volle Kontrolle über Berechtigungen, Freigaben und Audit pro Tool-Aufruf |
 | ADR-5 | n8n nur als externer Executor | ONYX behält Hoheit über Governance |
-| ADR-6 | Auth.js (NextAuth v5) oder Better Auth mit Prisma-Adapter | Self-hosted, DSGVO-freundlich, keine Daten bei Dritten. **Finale Wahl in Phase 1** |
+| ADR-6 | **Better Auth** (nur Authentifizierung) mit Prisma-Adapter, Passwort-Hashing argon2id, Telemetrie aus | Self-hosted, DSGVO-freundlich. Mandanten, Rollen und Einladungen sind **eigene** Module (nicht das Organization-Plugin), damit RLS, Audit und Eskalationsschutz vollständig in ONYX liegen |
+| ADR-7 | RLS mit `ENABLE` (ohne `FORCE`), App verbindet sich als Nicht-Eigentümer `onyx_app` | RLS gilt für die App zwingend. Die Eigentümerrolle bleibt für Migrationen und Wartung (Seed) nutzbar |

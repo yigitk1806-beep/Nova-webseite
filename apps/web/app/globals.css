@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+/* ONYX Design-Tokens. Dark ist Standard, Light über prefers-color-scheme. */
+:root {
+  --bg: #07080a;
+  --surface: #0e1013;
+  --surface-2: #15181c;
+  --border: #23272d;
+  --text: #eceef1;
+  --text-muted: #8b929c;
+  --accent: #8b7cf6;
+  --accent-contrast: #0b0a14;
+  --danger: #f2716b;
+  --success: #4fd1a1;
+  --warning: #f2c26b;
+  --ring: #8b7cf6;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f0f1f4;
+    --border: #dfe2e7;
+    --text: #0d0f12;
+    --text-muted: #5b626c;
+    --accent: #5b47e0;
+    --accent-contrast: #ffffff;
+    --danger: #c9362e;
+    --success: #13865d;
+    --warning: #9a6a06;
+    --ring: #5b47e0;
+    color-scheme: light;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-ring: var(--ring);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --radius-card: 14px;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

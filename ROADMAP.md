@@ -8,7 +8,7 @@
 | Phase | Titel | Ergebnis | Status |
 |---|---|---|---|
 | 0 | Audit & Architektur | Diese Dokumente | ✅ erledigt (zur Freigabe) |
-| 1 | Fundament: Core, Tenancy, Auth, Permissions, Audit | Lauffähige, sichere, mandantenfähige Basis ohne KI | ⏳ wartet auf Freigabe |
+| 1 | Fundament: Core, Tenancy, Auth, Permissions, Audit | Lauffähige, sichere, mandantenfähige Basis ohne KI | 🟡 Kern umgesetzt, Reste offen (siehe unten) |
 | 2 | Agent Engine (MVP) | Ein echter Agent mit READ-Tools, Run-Protokoll, Kostenerfassung | geplant |
 | 3 | Approvals & Workflow Engine | Freigabe-Flow, DAG-Workflows, Trigger | geplant |
 | 4 | Integration Layer & n8n | Connector-Framework, verschlüsselte Credentials, n8n-Brücke, 1–2 echte Integrationen | geplant |
@@ -87,7 +87,29 @@ Pen-Test · Lasttests · OpenTelemetry + Alerting · Backups/Restore-Übung · B
 
 ---
 
-## Offene Entscheidungen (für Freigabe Phase 1)
+## Stand Phase 1 (2026-11-05)
+
+Entscheidungen: Better Auth (nur Authentifizierung, eigene Tenancy), Hosting containerisiert in der EU, Login per E-Mail/Passwort, Repo-Umbenennung später.
+
+**Umgesetzt und getestet**
+- [x] Monorepo, strikte TS-Konfiguration, Zod-Env, Docker-Compose, GitHub-Actions-CI
+- [x] Prisma-Schema P1, Migrationen, RLS, DB-Rollen, Seed der Systemrollen
+- [x] Core: Fehlerhierarchie, pino mit Redaction, Request-ID, gehashte IP
+- [x] Auth: Registrierung, E-Mail-Verifikation, Login, Passwort-Reset, `proxy.ts`
+- [x] Tenant anlegen/umbenennen, Mitglieder einladen (Token-Link + E-Mail), Rolle ändern, entfernen/verlassen
+- [x] Eigene Rollen anlegen/löschen mit Eskalationsschutz
+- [x] Audit-Log-Ansicht mit Filter, Paginierung, Integritätsprüfung
+- [x] Nicht implementierte Module in der Navigation als „Bald verfügbar“ deaktiviert
+- [x] Worker-Skelett (BullMQ, Selbsttest, Graceful Shutdown)
+- [x] Abnahmekriterien 1.8: 29 Tests (davon 12 Integrationstests gegen Postgres) + manueller End-to-End-Browserlauf
+
+**Offen in Phase 1**
+- [ ] API-Schlüssel verwalten (Modell vorhanden, keine UI/Endpunkte)
+- [ ] Rollen bearbeiten in der UI (Service `updateRole` vorhanden)
+- [ ] Playwright-E2E-Tests ins Repository und in die CI übernehmen
+- [ ] Nonce-CSP, Redis-basiertes Rate Limiting, MFA (siehe SECURITY.md §6)
+
+## Offene Entscheidungen (ursprünglich, jetzt entschieden)
 
 1. **Repo-Name:** `Nova-webseite` → in `onyx` umbenennen?
 2. **Auth:** Auth.js v5 oder Better Auth (Empfehlung: kurze Evaluierung in 1.4, Tendenz Better Auth wegen nativer Org/MFA-Unterstützung).

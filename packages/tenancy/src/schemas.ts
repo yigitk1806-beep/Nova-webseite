@@ -1,7 +1,19 @@
 import { z } from 'zod';
 import { PERMISSIONS } from '@onyx/permissions';
 
-const RESERVED_SLUGS = new Set(['api', 'app', 'admin', 'auth', 'login', 'register', 'invite', 'onboarding', 'settings', 'www', 'onyx']);
+const RESERVED_SLUGS = new Set([
+  'api',
+  'app',
+  'admin',
+  'auth',
+  'login',
+  'register',
+  'invite',
+  'onboarding',
+  'settings',
+  'www',
+  'onyx',
+]);
 
 export const slugSchema = z
   .string()
@@ -37,7 +49,10 @@ export const roleInputSchema = z.object({
     .trim()
     .toLowerCase()
     .regex(/^[a-z][a-z0-9-]{1,30}$/, 'Schlüssel: Kleinbuchstaben, Ziffern, Bindestrich')
-    .refine((k) => !['owner', 'admin', 'member', 'viewer'].includes(k), 'Systemrollen-Schlüssel sind reserviert'),
+    .refine(
+      (k) => !['owner', 'admin', 'member', 'viewer'].includes(k),
+      'Systemrollen-Schlüssel sind reserviert',
+    ),
   name: z.string().trim().min(2).max(60),
   description: z.string().trim().max(200).optional(),
   permissions: z.array(z.enum(PERMISSIONS)).min(1, 'Mindestens eine Berechtigung'),
