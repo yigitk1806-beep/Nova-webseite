@@ -1,0 +1,220 @@
+// ONYX – Datenbankschema Phase 1 (Tenancy, Identity, Permissions, Audit)
+// Siehe DATABASE_SCHEMA.md. RLS-Policies liegen in der SQL-Migration.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────── Tenancy ─────────────
+
+model Tenant {
+  id            String   @id @default(cuid(2))
+  slug          String   @unique
+  name          String
+  plan          Plan     @default(FREE)
+  dataRegion    String   @default("eu-central")
+  settings      Json     @default("{}")
+  retentionDays Int      @default(365)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memberships Membership[]
+  roles       Role[]
+  invitations Invitation[]
+  apiKeys     ApiKey[]
+  auditLogs   AuditLog[]
+}
+
+model Membership {
+  id        String           @id @default(cuid(2))
+  tenantId  String
+  userId    String
+  roleId    String
+  status    MembershipStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@index([tenantId, roleId])
+}
+
+model Invitation {
+  id          String    @id @default(cuid(2))
+  tenantId    String
+  email       String
+  roleId      String
+  tokenHash   String    @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, email])
+}
+
+// ───────────── Permissions ─────────────
+
+/// tenantId = null → Systemrolle (owner/admin/member/viewer), für alle Tenants sichtbar.
+model Role {
+  id          String   @id @default(cuid(2))
+  tenantId    String?
+  key         String
+  name        String
+  description String?
+  permissions String[]
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  invitations Invitation[]
+
+  @@unique([tenantId, key])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid(2))
+  tenantId    String
+  name        String
+  prefix      String
+  hash        String    @unique
+  permissions String[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// ───────────── Audit (append-only) ─────────────
+
+model AuditLog {
+  id         BigInt    @id @default(autoincrement())
+  tenantId   String
+  actorType  ActorType
+  actorId    String
+  action     String
+  resource   String
+  resourceId String?
+  outcome    Outcome
+  metadata   Json      @default("{}")
+  requestId  String?
+  ipHash     String?
+  prevHash   String?
+  hash       String
+  createdAt  DateTime
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, resource, resourceId])
+}
+
+// ───────────── Identity (Better Auth) ─────────────
+// Feldnamen entsprechen dem Better-Auth-Kernschema.
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions    Session[]
+  accounts    Account[]
+  memberships Membership[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ───────────── Enums ─────────────
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum ActorType {
+  USER
+  AGENT
+  SYSTEM
+  API_KEY
+}
+
+enum Outcome {
+  SUCCESS
+  DENIED
+  FAILED
+}

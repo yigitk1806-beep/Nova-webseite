@@ -1,0 +1,31 @@
+{
+  "name": "@onyx/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "tsx src/seed.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@paralleldrive/cuid2": "^3.0.0",
+    "pg": "^8.16.0",
+    "@onyx/permissions": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.0",
+    "dotenv": "^17.2.0",
+    "prisma": "7.10.1",
+    "tsx": "^4.20.0"
+  }
+}
