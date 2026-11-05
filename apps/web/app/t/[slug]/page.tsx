@@ -8,7 +8,7 @@ const MODULES = [
   { name: 'Unternehmen & Mitglieder', status: 'live' },
   { name: 'Rollen & Berechtigungen', status: 'live' },
   { name: 'Audit-Log mit Hash-Kette', status: 'live' },
-  { name: 'Agent Engine', status: 'Phase 2' },
+  { name: 'Agent Engine (lesende Werkzeuge)', status: 'live' },
   { name: 'Freigaben & Workflows', status: 'Phase 3' },
   { name: 'Integrationen & n8n', status: 'Phase 4' },
   { name: 'Analytics & DSGVO-Werkzeuge', status: 'Phase 5' },

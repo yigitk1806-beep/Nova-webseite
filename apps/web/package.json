@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
+    "@onyx/agents": "workspace:*",
     "@onyx/audit": "workspace:*",
     "@onyx/config": "workspace:*",
     "@onyx/core": "workspace:*",
@@ -20,6 +21,7 @@
     "@onyx/permissions": "workspace:*",
     "@onyx/tenancy": "workspace:*",
     "better-auth": "1.7.17",
+    "bullmq": "^5.81.5",
     "ioredis": "^5.11.1",
     "motion": "^12.0.0",
     "next": "16.4.5",

@@ -69,6 +69,8 @@ Bitte Sicherheitslücken **nicht** als öffentliches Issue melden, sondern priva
 | Secret-Scanning (gitleaks) und Dependency-Audit (high/critical) in der CI | ✅ |
 | API-Schlüssel: nur SHA-256-Hash, Rechte = Schlüssel ∩ aktueller Ersteller, keine Schlüsselverwaltung/Löschrechte | ✅ Integrationstests |
 
+**KI-Agenten (Phase 2):** Werkzeug-Ergebnisse werden als Daten markiert; ein fester Sicherheitsrahmen steht vor jedem System-Prompt. Die eigentliche Abwehr gegen Prompt Injection ist das Policy Gate: nur freigegebene, lesende Werkzeuge, Rechte = Agent ∩ auslösende Person, jede Ablehnung als `agent.tool.denied` im Audit. Agent-Versionen sind auf DB-Ebene unveränderlich (kein `UPDATE`-Recht), `UsageRecord` ist append-only. Datenschutz: An Anthropic gehen nur die Aufgabe und die Werkzeug-Ergebnisse (z. B. Namen und Rollen, keine E-Mail-Adressen). Anthropic ist als Unterauftragsverarbeiter zu dokumentieren; per Kill Switch lässt sich die KI-Verarbeitung pro Unternehmen abschalten.
+
 Bekannte Einschränkung: `style-src` erlaubt `'unsafe-inline'` (Animationen setzen Inline-Styles). Skripte bleiben strikt nonce-gebunden.
 
 Bekannte Datenverarbeitung: Better Auth speichert IP-Adresse und User-Agent in `Session` (Sicherheitszweck, Löschung mit Ablauf der Session). In `AuditLog` wird nur ein gesalzener Hash der IP gespeichert.

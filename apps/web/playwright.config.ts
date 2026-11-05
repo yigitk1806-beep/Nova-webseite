@@ -28,6 +28,12 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
+      // Test-Worker mit skriptgesteuertem Modell (siehe e2e/fake-agent-worker.ts)
+      command: 'tsx --env-file-if-exists=../../.env e2e/fake-agent-worker.ts',
+      port: 3199,
+      reuseExistingServer: false,
+    },
+    {
       command: 'pnpm start',
       port: PORT,
       reuseExistingServer: false,
@@ -36,6 +42,9 @@ export default defineConfig({
         APP_URL: `http://localhost:${PORT}`,
         SMTP_URL: 'smtp://localhost:2525',
         LOG_LEVEL: 'warn',
+        // Nur Platzhalter, damit die UI Läufe zulässt. Die Web-App ruft die Anthropic-API nie auf;
+        // Läufe führt im E2E-Test ausschließlich der Test-Worker aus.
+        ANTHROPIC_API_KEY: 'e2e-placeholder-not-a-real-key',
       },
     },
   ],

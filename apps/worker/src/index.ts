@@ -1,56 +1,68 @@
 /**
- * ONYX Worker – führt asynchrone Jobs aus (ab Phase 2: Agent-Runs, ab Phase 3: Workflows).
- * Phase 1: Infrastruktur-Skelett mit Redis-Verbindung, System-Queue und sauberem Shutdown.
- * Es werden bewusst noch keine fachlichen Jobs registriert.
+ * ONYX Worker – führt asynchrone Jobs aus.
+ * - onyx-system: Infrastruktur (Selbsttest)
+ * - onyx-agents: Agent-Läufe (Phase 2)
  */
-import { Queue, Worker, type ConnectionOptions } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
 import { z } from 'zod';
+import {
+  AGENT_QUEUE,
+  AGENT_RUN_JOB,
+  createAnthropicLlm,
+  executeRun,
+  isLlmConfigured,
+  redisConnectionFromUrl,
+  unconfiguredLlm,
+  type AgentRunJobData,
+} from '@onyx/agents';
 import { logger } from '@onyx/core';
 
-const env = z.object({ REDIS_URL: z.url() }).parse(process.env);
-const url = new URL(env.REDIS_URL);
-const connection: ConnectionOptions = {
-  host: url.hostname,
-  port: Number(url.port || 6379),
-  ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
-  ...(url.username ? { username: decodeURIComponent(url.username) } : {}),
-  ...(url.protocol === 'rediss:' ? { tls: {} } : {}),
-  maxRetriesPerRequest: null,
-};
-
-export const SYSTEM_QUEUE = 'onyx-system';
+const env = z.object({ REDIS_URL: z.url(), DATABASE_URL: z.url() }).parse(process.env);
+const connection = redisConnectionFromUrl(env.REDIS_URL);
 const log = logger.child({ component: 'worker' });
 
-const worker = new Worker(
+export const SYSTEM_QUEUE = 'onyx-system';
+
+const llm = isLlmConfigured() ? createAnthropicLlm() : unconfiguredLlm;
+if (!isLlmConfigured())
+  log.warn('ANTHROPIC_API_KEY fehlt – Agent-Läufe werden mit Hinweis abgelehnt');
+
+const systemWorker = new Worker(
   SYSTEM_QUEUE,
   async (job) => {
-    switch (job.name) {
-      case 'ping':
-        return { pong: true, at: new Date().toISOString() };
-      default:
-        throw new Error(`Unbekannter Job-Typ: ${job.name}`);
-    }
+    if (job.name === 'ping') return { pong: true, at: new Date().toISOString() };
+    throw new Error(`Unbekannter Job-Typ: ${job.name}`);
   },
   { connection, concurrency: 5 },
 );
 
-worker.on('ready', () => log.info({ queue: SYSTEM_QUEUE }, 'worker ready'));
-worker.on('failed', (job, err) =>
-  log.error({ jobId: job?.id, name: job?.name, err }, 'job failed'),
+const jobSchema = z.object({ runId: z.string().min(1), tenantId: z.string().min(1) });
+
+const agentWorker = new Worker<AgentRunJobData>(
+  AGENT_QUEUE,
+  async (job) => {
+    if (job.name !== AGENT_RUN_JOB) throw new Error(`Unbekannter Job-Typ: ${job.name}`);
+    const { runId, tenantId } = jobSchema.parse(job.data);
+    const outcome = await executeRun(runId, tenantId, llm);
+    log.info({ runId, tenantId, ...outcome }, 'agent run finished');
+    return outcome;
+  },
+  // Agent-Läufe verursachen Kosten: keine automatischen Wiederholungen (attempts beim Einreihen = 1).
+  { connection, concurrency: 4 },
 );
 
-// Selbsttest beim Start: bestätigt, dass Queue → Worker → Ergebnis funktioniert.
-const queue = new Queue(SYSTEM_QUEUE, { connection });
-await queue.add('ping', {}, { removeOnComplete: 100, removeOnFail: 1000 });
+for (const w of [systemWorker, agentWorker]) {
+  w.on('ready', () => log.info({ queue: w.name }, 'worker ready'));
+  w.on('failed', (job, err) => log.error({ queue: w.name, jobId: job?.id, err }, 'job failed'));
+}
+
+const systemQueue = new Queue(SYSTEM_QUEUE, { connection });
+await systemQueue.add('ping', {}, { removeOnComplete: 100, removeOnFail: 1000 });
 
 async function shutdown(signal: string) {
   log.info({ signal }, 'shutting down');
-  await worker.close();
-  await queue.close();
+  await Promise.all([systemWorker.close(), agentWorker.close(), systemQueue.close()]);
   process.exit(0);
 }
 process.on('SIGTERM', () => void shutdown('SIGTERM'));
 process.on('SIGINT', () => void shutdown('SIGINT'));
-worker.on('completed', (job, result) =>
-  log.debug({ jobId: job.id, name: job.name, result }, 'job completed'),
-);

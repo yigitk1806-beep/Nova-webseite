@@ -20,6 +20,9 @@ importers:
       '@node-rs/argon2':
         specifier: ^2.0.2
         version: 2.2.2
+      '@onyx/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
       '@onyx/audit':
         specifier: workspace:*
         version: link:../../packages/audit
@@ -41,6 +44,9 @@ importers:
       better-auth:
         specifier: 1.7.17
         version: 1.7.17(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@22.20.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3))(typescript@5.9.3))(mysql2@3.24.4(@types/node@22.20.5))(next@16.4.5(@babel/core@7.29.13)(@opentelemetry/api@1.10.0)(@playwright/test@1.63.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(pg@8.23.1)(prisma@7.10.1(@types/node@22.20.5)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@4.1.12(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(vite@8.3.6(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
+      bullmq:
+        specifier: ^5.81.5
+        version: 5.81.5
       ioredis:
         specifier: ^5.11.1
         version: 5.11.1
@@ -123,9 +129,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@onyx/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
       '@onyx/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@onyx/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       bullmq:
         specifier: ^5.81.5
         version: 5.81.5

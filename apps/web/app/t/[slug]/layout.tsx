@@ -19,6 +19,7 @@ export default async function TenantLayout({
 
   const items = [
     { href: '', label: 'Übersicht', enabled: true },
+    { href: '/agents', label: 'Agenten', enabled: can(access, 'agent:read') },
     { href: '/members', label: 'Mitglieder', enabled: can(access, 'member:read') },
     { href: '/roles', label: 'Rollen', enabled: can(access, 'role:read') },
     { href: '/audit', label: 'Audit-Log', enabled: can(access, 'audit:read') },

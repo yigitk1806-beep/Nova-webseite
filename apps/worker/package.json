@@ -11,7 +11,9 @@
   "dependencies": {
     "@onyx/core": "workspace:*",
     "bullmq": "^5.81.5",
-    "zod": "^4.3.4"
+    "zod": "^4.3.4",
+    "@onyx/agents": "workspace:*",
+    "@onyx/db": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",

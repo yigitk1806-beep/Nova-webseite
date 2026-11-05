@@ -1,6 +1,23 @@
 # ONYX – Agent-Architektur
 
-> Status: Entwurf v0.1 · Umsetzung ab Phase 2
+> Status: v0.2 · Phase 2 (MVP) umgesetzt in `packages/agents`, `apps/worker`, `apps/web/app/t/[slug]/agents`
+
+## 0. Umsetzungsstand Phase 2
+
+| Baustein | Stand |
+|---|---|
+| Agent Registry (Definition + unveränderliche Versionen) | ✅ inkl. Vorlage „Unternehmensassistent“, Versionshistorie |
+| Tool Registry | ✅ 4 lesende Werkzeuge auf ONYX-Daten (Unternehmen, Mitglieder ohne E-Mail, Rollen, Audit) |
+| Runtime (manuelle Schleife im Worker, BullMQ `onyx-agents`) | ✅ atomare Übernahme, Persistenz je Schritt, Stop-Gründe inkl. `refusal`/`pause_turn` |
+| Policy Gate | ✅ Tool freigegeben? Risikoklasse = READ? Berechtigung? Eingabe valide (Zod)? |
+| Effektive Rechte | ✅ Agent-Version ∩ Rechte der auslösenden Person (beim Start ermittelt) |
+| LLM Gateway | ✅ Anthropic SDK, Schlüssel nur aus `ANTHROPIC_API_KEY`, Server-Fallback bei Ablehnung (`fallbacks: "default"`), Modell-Allowlist (`ONYX_AGENT_MODELS`) |
+| Kosten | ✅ Tokens + Kosten je Schritt/Lauf, `UsageRecord` (append-only), Budget je Lauf und Monatsbudget je Unternehmen |
+| Kill Switch | ✅ Tenant-Einstellung; bricht laufende Läufe ab, wird vor jedem Modellaufruf geprüft |
+| Approval Service | ⏳ Phase 3 – Werkzeuge mit Risikoklasse > READ werden bis dahin verweigert |
+| Memory/Wissen (pgvector) | ⏳ später |
+
+Bekannte Grenzen: Ein Lauf, dessen Worker abstürzt, bleibt im Status `RUNNING` (Aufräumjob folgt). Kosten sind eine Schätzung auf Basis der Listenpreise – maßgeblich ist die Anthropic-Abrechnung. Ohne `ANTHROPIC_API_KEY` zeigt die Oberfläche einen Hinweis und startet keine Läufe.
 
 ## 1. Grundsatz
 
@@ -65,7 +82,7 @@ interface ToolDefinition<I extends z.ZodTypeAny, O> {
 
 ## 6. Modellwahl
 
-Modell-IDs sind **nicht hartcodiert**. Erlaubte Modelle stehen in der Konfiguration (Allowlist) und werden pro `AgentVersion` gewählt. Standard: ein leistungsfähiges Modell für komplexe Agenten, ein schnelles und günstiges für Klassifikation und Routing. Der API-Key kommt ausschließlich aus der Umgebung (`ANTHROPIC_API_KEY`) bzw. einem Secret Store.
+Erlaubte Modelle stehen in der Konfiguration (`ONYX_AGENT_MODELS`) und werden pro `AgentVersion` gewählt; zugelassen sind nur Modelle mit hinterlegtem Preis (`packages/agents/src/pricing.ts`). Standard für neue Agenten ist Claude Opus 5.5 mit Effort `medium`. Standard: ein leistungsfähiges Modell für komplexe Agenten, ein schnelles und günstiges für Klassifikation und Routing. Der API-Key kommt ausschließlich aus der Umgebung (`ANTHROPIC_API_KEY`) bzw. einem Secret Store.
 
 ## 7. Geplante Agententypen (Produkt, nicht Phase 1)
 

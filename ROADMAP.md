@@ -9,7 +9,7 @@
 |---|---|---|---|
 | 0 | Audit & Architektur | Diese Dokumente | ✅ erledigt (zur Freigabe) |
 | 1 | Fundament: Core, Tenancy, Auth, Permissions, Audit | Lauffähige, sichere, mandantenfähige Basis ohne KI | ✅ umgesetzt (offen: MFA-Pflicht pro Tenant, s. u.) |
-| 2 | Agent Engine (MVP) | Ein echter Agent mit READ-Tools, Run-Protokoll, Kostenerfassung | geplant |
+| 2 | Agent Engine (MVP) | Ein echter Agent mit READ-Tools, Run-Protokoll, Kostenerfassung | ✅ umgesetzt (echte Läufe benötigen `ANTHROPIC_API_KEY`) |
 | 3 | Approvals & Workflow Engine | Freigabe-Flow, DAG-Workflows, Trigger | geplant |
 | 4 | Integration Layer & n8n | Connector-Framework, verschlüsselte Credentials, n8n-Brücke, 1–2 echte Integrationen | geplant |
 | 5 | Analytics & DSGVO-Werkzeuge | Dashboards, Export/Löschung, Retention-Jobs | geplant |
@@ -70,7 +70,11 @@
 
 ---
 
-## Phase 2 – Agent Engine (MVP)
+## Phase 2 – Agent Engine (MVP) ✅
+
+Umgesetzt: siehe AGENT_ARCHITECTURE.md §0. Getestet mit 10 Integrationstests (skriptgesteuertes Modell, echte Datenbank) und einem E2E-Test (UI → Queue → Worker → UI). Offen: Aufräumjob für abgestürzte Läufe, Live-Test mit echtem API-Schlüssel.
+
+Ursprünglicher Plan:
 LLM Gateway (Anthropic SDK, Retries, Token- und Kostenerfassung) · Tool Registry · Runtime im Worker · `AgentRun`/`AgentStep` · ein Agent „Unternehmensassistent“ mit READ-Tools auf ONYX-eigenen Daten · Run-Ansicht mit vollständigem Schrittprotokoll · Budgets & Kill Switch.
 
 ## Phase 3 – Approvals & Workflows

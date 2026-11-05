@@ -20,7 +20,7 @@ export function Sidebar({
 }) {
   const path = usePathname();
   const base = `/t/${slug}`;
-  const upcoming = ['Agenten', 'Workflows', 'Integrationen', 'Analytics'];
+  const upcoming = ['Freigaben & Workflows', 'Integrationen', 'Analytics'];
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-b border-border bg-surface md:min-h-dvh md:w-60 md:border-b-0 md:border-r">

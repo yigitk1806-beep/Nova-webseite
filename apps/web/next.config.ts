@@ -19,7 +19,15 @@ const config: NextConfig = {
     '@onyx/tenancy',
     '@onyx/config',
   ],
-  serverExternalPackages: ['@node-rs/argon2', 'pino', 'pg', '@prisma/client', '@prisma/adapter-pg'],
+  serverExternalPackages: [
+    'bullmq',
+    '@anthropic-ai/sdk',
+    '@node-rs/argon2',
+    'pino',
+    'pg',
+    '@prisma/client',
+    '@prisma/adapter-pg',
+  ],
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

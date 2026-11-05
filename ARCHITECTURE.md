@@ -1,7 +1,7 @@
 # ONYX – Architektur
 
 > Status: v0.2 · Stand: 2026-11-05
-> Phase 1 (Core, Tenancy, Auth, Permissions, Audit) ist implementiert. Die übrigen Module beschreiben die **Zielarchitektur**.
+> Phase 1 (Core, Tenancy, Auth, Permissions, Audit) und Phase 2 (Agent Engine) sind implementiert. Die übrigen Module beschreiben die **Zielarchitektur**.
 
 ---
 
@@ -148,7 +148,7 @@ Tooling: pnpm Workspaces, TypeScript `strict` (inkl. `noUncheckedIndexedAccess`)
 
 **Umsetzungsstand Phase 1 (Abweichungen vom Ziel):**
 - UI-Primitives liegen vorerst in `apps/web/components/ui`. Sie wandern nach `packages/ui`, sobald eine zweite App sie nutzt.
-- `packages/agents`, `workflows`, `integrations`, `analytics` existieren noch nicht (Phasen 2–5).
+- `packages/workflows`, `integrations`, `analytics` existieren noch nicht (Phasen 3–5).
 
 ---
 

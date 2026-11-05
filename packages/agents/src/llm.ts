@@ -33,8 +33,21 @@ export function createAnthropicLlm(): LlmClient {
   };
 }
 
+export class LlmNotConfiguredError extends Error {
+  constructor() {
+    super('ANTHROPIC_API_KEY ist nicht konfiguriert');
+  }
+}
+
+/** Platzhalter, wenn kein Schlüssel hinterlegt ist: jeder Aufruf schlägt ehrlich fehl. */
+export const unconfiguredLlm: LlmClient = {
+  create: () => Promise.reject(new LlmNotConfiguredError()),
+};
+
 /** Öffentliche, nicht-technische Fehlermeldung für LLM-Fehler. */
 export function describeLlmError(err: unknown): string {
+  if (err instanceof LlmNotConfiguredError)
+    return 'Kein Anthropic-API-Schlüssel konfiguriert (ANTHROPIC_API_KEY).';
   if (err instanceof Anthropic.AuthenticationError)
     return 'Der Anthropic-API-Schlüssel ist ungültig.';
   if (err instanceof Anthropic.PermissionDeniedError)

@@ -2,7 +2,7 @@
 
 Mandantenfähiges KI-Unternehmensbetriebssystem. Architektur und Plan: [ARCHITECTURE.md](./ARCHITECTURE.md) · [ROADMAP.md](./ROADMAP.md) · [SECURITY.md](./SECURITY.md)
 
-**Stand:** Phase 1 (Fundament) – Konten inkl. 2FA, Unternehmen, Mitglieder, Rollen, API-Schlüssel, REST-API, Audit-Log. KI-Agenten folgen in Phase 2.
+**Stand:** Phase 1 (Fundament) und Phase 2 (Agent Engine, lesende Werkzeuge). Freigaben & Workflows folgen in Phase 3.
 
 ## Struktur
 
@@ -14,7 +14,8 @@ packages/core   Fehler, Logger (pino, Redaction), Request-Kontext
 packages/db     Prisma-Schema, Migrationen inkl. RLS, tenant-gebundene Transaktionen
 packages/permissions  Permission-Katalog, Systemrollen, Eskalationsschutz
 packages/audit  Append-only Audit-Log mit Hash-Kette
-packages/tenancy  Services: Unternehmen, Mitglieder, Einladungen, Rollen
+packages/tenancy  Services: Unternehmen, Mitglieder, Einladungen, Rollen, API-Schlüssel
+packages/agents   Agent Engine: LLM-Gateway, Werkzeuge, Policy Gate, Laufzeit, Kosten
 ```
 
 ## Lokale Entwicklung
@@ -30,6 +31,8 @@ ln -s ../../.env apps/web/.env  # Next.js liest .env aus dem App-Verzeichnis
 pnpm dev                        # http://localhost:3000
 pnpm dev:worker                 # optional
 ```
+
+Für echte Agent-Läufe `ANTHROPIC_API_KEY` in `.env` setzen und den Worker starten (`pnpm dev:worker`). Ohne Schlüssel zeigt die Oberfläche einen Hinweis.
 
 Ohne `SMTP_URL` werden E-Mails (Bestätigung, Einladung) in Entwicklung ins Server-Log geschrieben. In Produktion startet die App ohne SMTP nicht.
 
