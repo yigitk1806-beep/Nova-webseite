@@ -1,5 +1,4 @@
 import type { Permission } from '@onyx/permissions';
-import { DEFAULT_MODEL } from './pricing.ts';
 
 export interface AgentTemplate {
   key: string;
@@ -10,6 +9,8 @@ export interface AgentTemplate {
   permissions: Permission[];
   model: string;
   effort: 'low' | 'medium' | 'high';
+  /** Kostenlimit pro Lauf in US-Cent */
+  budgetCents: number;
 }
 
 export const AGENT_TEMPLATES: readonly AgentTemplate[] = [
@@ -27,8 +28,10 @@ export const AGENT_TEMPLATES: readonly AgentTemplate[] = [
     ].join('\n'),
     tools: ['onyx_tenant_info', 'onyx_members_list', 'onyx_roles_list', 'onyx_audit_search'],
     permissions: ['tenant:read', 'member:read', 'role:read', 'audit:read'],
-    model: DEFAULT_MODEL,
-    effort: 'medium',
+    // Günstigstes Modell: ein typischer Lauf kostet nach Listenpreis ca. 0,04 US-Cent.
+    model: 'claude-haiku-5-5',
+    effort: 'low',
+    budgetCents: 5,
   },
 ];
 

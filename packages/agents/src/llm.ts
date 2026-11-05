@@ -18,18 +18,30 @@ export function isLlmConfigured(env: Record<string, string | undefined> = proces
 /**
  * Einziger Ort mit direktem Anthropic-Zugriff.
  * - Schlüssel ausschließlich aus der Umgebung (ANTHROPIC_API_KEY)
- * - Server-seitiger Fallback bei Ablehnung durch Sicherheitsklassifikatoren ("default")
+ * - Server-seitiger Fallback bei Ablehnung durch Sicherheitsklassifikatoren, wo verfügbar
  * - Retries für 429/5xx übernimmt das SDK (maxRetries)
  */
+/**
+ * Modelle, für die Anthropic den server-seitigen Fallback (`fallbacks: "default"`) anbietet.
+ * Claude Haiku 5.5 unterstützt ihn nicht – dort wird eine Ablehnung als Lauf-Fehler gemeldet.
+ */
+const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5']);
+
+export function supportsServerFallback(model: string): boolean {
+  return FALLBACK_MODELS.has(model);
+}
+
 export function createAnthropicLlm(): LlmClient {
   const client = new Anthropic({ maxRetries: 2, timeout: 180_000 });
   return {
     create: (params) =>
-      client.beta.messages.create({
-        ...params,
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-      }),
+      supportsServerFallback(params.model)
+        ? client.beta.messages.create({
+            ...params,
+            betas: ['server-side-fallback-2026-07-01'],
+            fallbacks: 'default',
+          })
+        : client.beta.messages.create(params),
   };
 }
 

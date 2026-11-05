@@ -107,6 +107,7 @@ export async function installTemplate(access: TenantAccess, templateKey: string)
           systemPrompt: tpl.systemPrompt,
           model: tpl.model,
           effort: tpl.effort,
+          budgetCents: tpl.budgetCents,
           tools: tpl.tools,
           permissions: tpl.permissions,
           createdById: access.actor.id,

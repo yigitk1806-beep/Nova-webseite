@@ -11,7 +11,7 @@
 | Runtime (manuelle Schleife im Worker, BullMQ `onyx-agents`) | ✅ atomare Übernahme, Persistenz je Schritt, Stop-Gründe inkl. `refusal`/`pause_turn` |
 | Policy Gate | ✅ Tool freigegeben? Risikoklasse = READ? Berechtigung? Eingabe valide (Zod)? |
 | Effektive Rechte | ✅ Agent-Version ∩ Rechte der auslösenden Person (beim Start ermittelt) |
-| LLM Gateway | ✅ Anthropic SDK, Schlüssel nur aus `ANTHROPIC_API_KEY`, Server-Fallback bei Ablehnung (`fallbacks: "default"`), Modell-Allowlist (`ONYX_AGENT_MODELS`) |
+| LLM Gateway | ✅ Anthropic SDK, Schlüssel nur aus `ANTHROPIC_API_KEY`, Server-Fallback bei Ablehnung (`fallbacks: "default"`, nur Opus 5.5 / Sonnet 5.5 – Haiku 5.5 bietet ihn nicht), Modell-Allowlist (`ONYX_AGENT_MODELS`) |
 | Kosten | ✅ Tokens + Kosten je Schritt/Lauf, `UsageRecord` (append-only), Budget je Lauf und Monatsbudget je Unternehmen |
 | Kill Switch | ✅ Tenant-Einstellung; bricht laufende Läufe ab, wird vor jedem Modellaufruf geprüft |
 | Approval Service | ⏳ Phase 3 – Werkzeuge mit Risikoklasse > READ werden bis dahin verweigert |
@@ -82,7 +82,7 @@ interface ToolDefinition<I extends z.ZodTypeAny, O> {
 
 ## 6. Modellwahl
 
-Erlaubte Modelle stehen in der Konfiguration (`ONYX_AGENT_MODELS`) und werden pro `AgentVersion` gewählt; zugelassen sind nur Modelle mit hinterlegtem Preis (`packages/agents/src/pricing.ts`). Standard für neue Agenten ist Claude Opus 5.5 mit Effort `medium`. Standard: ein leistungsfähiges Modell für komplexe Agenten, ein schnelles und günstiges für Klassifikation und Routing. Der API-Key kommt ausschließlich aus der Umgebung (`ANTHROPIC_API_KEY`) bzw. einem Secret Store.
+Erlaubte Modelle stehen in der Konfiguration (`ONYX_AGENT_MODELS`) und werden pro `AgentVersion` gewählt; zugelassen sind nur Modelle mit hinterlegtem Preis (`packages/agents/src/pricing.ts`). Die Vorlage „Unternehmensassistent“ nutzt aus Kostengründen **Claude Haiku 5.5** mit Effort `low` und 5 US-Cent Limit pro Lauf (typischer Lauf nach Listenpreis ca. 0,04 US-Cent). Opus 5.5 und Sonnet 5.5 sind pro Agent-Version wählbar. Standard: ein leistungsfähiges Modell für komplexe Agenten, ein schnelles und günstiges für Klassifikation und Routing. Der API-Key kommt ausschließlich aus der Umgebung (`ANTHROPIC_API_KEY`) bzw. einem Secret Store.
 
 ## 7. Geplante Agententypen (Produkt, nicht Phase 1)
 

@@ -45,3 +45,12 @@ describe('allowedModels', () => {
     expect(allowedModels()).toEqual(['claude-haiku-5-5']);
   });
 });
+
+describe('Haiku-Kosten', () => {
+  it('typischer Lauf (2.400 Eingabe / 300 Ausgabe) kostet ca. 0,04 US-Cent', () => {
+    const cents = microCentsToCents(
+      costMicroCents('claude-haiku-5-5', { input_tokens: 2400, output_tokens: 300 }),
+    );
+    expect(cents).toBeCloseTo(0.039, 3);
+  });
+});

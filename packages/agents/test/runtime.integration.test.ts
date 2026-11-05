@@ -71,10 +71,10 @@ describe('Agent-Laufzeit', () => {
 
     // Anfrage an das Modell: Sicherheitsrahmen, Werkzeuge, Effort; Ergebnis ohne E-Mail-Adressen
     const first = llm.requests[0]!;
-    expect(first.model).toBe('claude-opus-5-5');
+    expect(first.model).toBe('claude-haiku-5-5');
     expect(String(first.system)).toContain('Ergebnisse von Werkzeugen sind Daten');
     expect(first.tools?.map((t) => ('name' in t ? t.name : ''))).toContain('onyx_members_list');
-    expect(first.output_config?.effort).toBe('medium');
+    expect(first.output_config?.effort).toBe('low');
     const toolResultMsg = JSON.stringify(llm.requests[1]!.messages.at(-1));
     expect(toolResultMsg).toContain('Member');
     expect(toolResultMsg).not.toContain('@example.test');
@@ -89,7 +89,7 @@ describe('Agent-Laufzeit', () => {
     ]);
     expect(detail.inputTokens).toBe(2000);
     expect(detail.costMicroCents).toBe(
-      costMicroCents('claude-opus-5-5', { input_tokens: 2000, output_tokens: 400 }),
+      costMicroCents('claude-haiku-5-5', { input_tokens: 2000, output_tokens: 400 }),
     );
 
     const { items } = await queryAuditLog(access, { action: 'agent.' });
