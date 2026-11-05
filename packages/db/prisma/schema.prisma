@@ -133,17 +133,36 @@ model AuditLog {
 // Feldnamen entsprechen dem Better-Auth-Kernschema.
 
 model User {
-  id            String   @id
-  name          String
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id
+  name             String
+  email            String   @unique
+  emailVerified    Boolean  @default(false)
+  image            String?
+  /// Better Auth two-factor plugin
+  twoFactorEnabled Boolean? @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   sessions    Session[]
   accounts    Account[]
   memberships Membership[]
+  twoFactors  TwoFactor[]
+}
+
+/// Better Auth two-factor plugin. Das TOTP-Secret wird von Better Auth verschlüsselt gespeichert.
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
 }
 
 model Session {

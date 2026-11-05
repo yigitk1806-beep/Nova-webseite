@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { PERMISSION_LABELS, PERMISSIONS, toPermissions } from '@onyx/permissions';
+import { canGrant, PERMISSION_LABELS, PERMISSIONS, toPermissions } from '@onyx/permissions';
 import { can, listRoles } from '@onyx/tenancy';
 import { ConfirmButtonForm } from '@/components/tenant/members-client';
 import { PageHeader } from '@/components/tenant/page-header';
-import { CreateRoleForm } from '@/components/tenant/roles-client';
+import { CreateRoleForm, EditRoleForm } from '@/components/tenant/roles-client';
 import { Badge, Card, CardHeader } from '@/components/ui/card';
 import { requireTenantAccess } from '@/lib/server';
-import { createRoleAction, deleteRoleAction } from '../actions';
+import { createRoleAction, deleteRoleAction, updateRoleAction } from '../actions';
 
 export const metadata: Metadata = { title: 'Rollen' };
 
@@ -57,6 +57,18 @@ export default async function RolesPage({ params }: { params: Promise<{ slug: st
                 </li>
               ))}
             </ul>
+            {canManage && !r.isSystem && canGrant(access.permissions, r.permissions) ? (
+              <EditRoleForm
+                action={updateRoleAction.bind(null, slug, r.id)}
+                grantable={grantable}
+                role={{
+                  id: r.id,
+                  name: r.name,
+                  description: r.description,
+                  permissions: r.permissions,
+                }}
+              />
+            ) : null}
           </Card>
         ))}
       </div>

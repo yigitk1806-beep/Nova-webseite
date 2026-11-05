@@ -18,5 +18,6 @@ describe('parseServerEnv', () => {
   });
   it('verlangt SMTP in Produktion', () => {
     expect(() => parseServerEnv({ ...base, NODE_ENV: 'production' })).toThrow(/SMTP_URL/);
+    expect(() => parseServerEnv({ ...base, NODE_ENV: 'production' })).toThrow(/REDIS_URL/);
   });
 });

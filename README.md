@@ -2,7 +2,7 @@
 
 Mandantenfähiges KI-Unternehmensbetriebssystem. Architektur und Plan: [ARCHITECTURE.md](./ARCHITECTURE.md) · [ROADMAP.md](./ROADMAP.md) · [SECURITY.md](./SECURITY.md)
 
-**Stand:** Phase 1 (Fundament) – Konten, Unternehmen, Mitglieder, Rollen, Audit-Log. KI-Agenten folgen in Phase 2.
+**Stand:** Phase 1 (Fundament) – Konten inkl. 2FA, Unternehmen, Mitglieder, Rollen, API-Schlüssel, REST-API, Audit-Log. KI-Agenten folgen in Phase 2.
 
 ## Struktur
 
@@ -37,6 +37,17 @@ Ohne `SMTP_URL` werden E-Mails (Bestätigung, Einladung) in Entwicklung ins Serv
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
+```
+
+End-to-End (nach `pnpm build`, mit laufender DB und Redis): `pnpm --filter @onyx/web test:e2e`. Ein lokaler SMTP-Empfänger wird automatisch gestartet.
+
+## REST-API
+
+Authentifizierung per API-Schlüssel (anlegen unter *API-Schlüssel* im Unternehmen):
+
+```bash
+curl -H "Authorization: Bearer onyx_sk_…" http://localhost:3000/api/v1/members   # member:read
+curl -H "Authorization: Bearer onyx_sk_…" http://localhost:3000/api/v1/audit     # audit:read
 ```
 
 `pnpm test` enthält Integrationstests gegen die echte Datenbank (Tenant-Isolation per RLS, Berechtigungen, Audit-Kette) und benötigt die laufende Postgres-Instanz.

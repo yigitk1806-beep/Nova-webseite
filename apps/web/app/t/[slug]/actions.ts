@@ -4,11 +4,14 @@ import { serverEnv } from '@onyx/config';
 import { logger } from '@onyx/core';
 import {
   changeMemberRole,
+  createApiKey,
   createRole,
   deleteRole,
   inviteMember,
   removeMember,
+  revokeApiKey,
   revokeInvitation,
+  updateRole,
   updateTenant,
   verifyTenantAuditChain,
 } from '@onyx/tenancy';
@@ -110,4 +113,43 @@ export async function verifyAuditAction(
     const r = await verifyTenantAuditChain(access);
     return { ok: r.ok, checked: r.checked };
   });
+}
+
+export async function createApiKeyAction(
+  slug: string,
+  _prev: Prev<{ key: string; prefix: string }>,
+  fd: FormData,
+) {
+  const access = await requireTenantAccess(slug);
+  const expires = fd.get('expiresInDays');
+  const r = await runAction(async () => {
+    const { apiKey, key } = await createApiKey(access, {
+      name: fd.get('name'),
+      permissions: fd.getAll('permissions'),
+      expiresInDays: expires === 'never' ? null : expires,
+    });
+    return { key, prefix: apiKey.prefix };
+  });
+  revalidatePath(`/t/${slug}/api-keys`);
+  return r;
+}
+
+export async function revokeApiKeyAction(slug: string, apiKeyId: string, _prev: Prev) {
+  const access = await requireTenantAccess(slug);
+  const r = await runAction(() => revokeApiKey(access, apiKeyId), 'Schlüssel widerrufen.');
+  revalidatePath(`/t/${slug}/api-keys`);
+  return r;
+}
+
+export async function updateRoleAction(slug: string, roleId: string, _prev: Prev, fd: FormData) {
+  const access = await requireTenantAccess(slug);
+  const r = await runAction(async () => {
+    await updateRole(access, roleId, {
+      name: fd.get('name'),
+      description: fd.get('description') || undefined,
+      permissions: fd.getAll('permissions'),
+    });
+  }, 'Rolle gespeichert.');
+  revalidatePath(`/t/${slug}/roles`);
+  return r;
 }

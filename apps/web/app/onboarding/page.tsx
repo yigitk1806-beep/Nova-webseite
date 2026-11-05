@@ -17,7 +17,12 @@ export default async function OnboardingPage() {
     <main className="mx-auto max-w-lg px-4 py-12">
       <div className="mb-10 flex items-center justify-between">
         <Logo />
-        <SignOutButton />
+        <div className="flex items-center gap-2">
+          <Link href="/account/security" className="text-sm text-muted hover:text-text">
+            Sicherheit
+          </Link>
+          <SignOutButton />
+        </div>
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">Hallo {user.name}</h1>
       <p className="mt-1 text-sm text-muted">Wähle ein Unternehmen oder lege ein neues an.</p>

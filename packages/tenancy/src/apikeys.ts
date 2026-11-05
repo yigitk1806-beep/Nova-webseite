@@ -164,17 +164,19 @@ export async function authenticateApiKey(
     throw new UnauthenticatedError('Ungültiger API-Schlüssel.');
   }
   return withTenant(key.tenantId, key.createdById, async (tx) => {
-    const [tenant, creator, current] = await Promise.all([
-      tx.tenant.findUniqueOrThrow({
-        where: { id: key.tenantId },
-        select: { slug: true, name: true },
-      }),
-      tx.membership.findUnique({
-        where: { tenantId_userId: { tenantId: key.tenantId, userId: key.createdById } },
-        include: { role: { select: { permissions: true } } },
-      }),
-      tx.apiKey.findUniqueOrThrow({ where: { id: key.id }, select: { lastUsedAt: true } }),
-    ]);
+    // Sequentiell: Abfragen innerhalb einer Transaktion teilen sich eine Verbindung.
+    const tenant = await tx.tenant.findUniqueOrThrow({
+      where: { id: key.tenantId },
+      select: { slug: true, name: true },
+    });
+    const creator = await tx.membership.findUnique({
+      where: { tenantId_userId: { tenantId: key.tenantId, userId: key.createdById } },
+      include: { role: { select: { permissions: true } } },
+    });
+    const current = await tx.apiKey.findUniqueOrThrow({
+      where: { id: key.id },
+      select: { lastUsedAt: true },
+    });
     if (!creator || creator.status !== 'ACTIVE')
       throw new UnauthenticatedError('Ungültiger API-Schlüssel.');
     if (

@@ -8,7 +8,8 @@
     "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "NEXT_TELEMETRY_DISABLED=1 next start",
     "lint": "eslint .",
-    "typecheck": "next typegen && tsc -p tsconfig.json"
+    "typecheck": "next typegen && tsc -p tsconfig.json",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
@@ -19,24 +20,33 @@
     "@onyx/permissions": "workspace:*",
     "@onyx/tenancy": "workspace:*",
     "better-auth": "1.7.17",
+    "ioredis": "^5.11.1",
     "motion": "^12.0.0",
     "next": "16.4.5",
-    "nodemailer": "^7.0.0",
+    "nodemailer": "^10.3.1",
+    "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "zod": "^4.3.4",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4.3.4",
+    "@types/mailparser": "^3.9.0",
     "@types/node": "^22.18.0",
     "@types/nodemailer": "^7.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/smtp-server": "^3.5.13",
     "eslint": "^9.39.0",
     "eslint-config-next": "16.4.5",
+    "mailparser": "^3.14.2",
+    "smtp-server": "^3.21.3",
     "tailwindcss": "^4.3.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }

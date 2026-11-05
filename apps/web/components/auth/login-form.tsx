@@ -22,7 +22,7 @@ export function LoginForm({ next }: { next?: string | undefined }) {
     setPending(true);
     setError(null);
     setUnverified(null);
-    const { error } = await authClient.signIn.email({
+    const { data, error } = await authClient.signIn.email({
       email,
       password: String(form.get('password')),
     });
@@ -35,6 +35,8 @@ export function LoginForm({ next }: { next?: string | undefined }) {
       setError('E-Mail oder Passwort ist falsch.');
       return;
     }
+    // Bei aktivem 2FA leitet das Client-Plugin zur Code-Eingabe weiter.
+    if (data && 'twoFactorRedirect' in data && data.twoFactorRedirect) return;
     router.push(target);
     router.refresh();
   }

@@ -63,10 +63,13 @@ Bitte Sicherheitslücken **nicht** als öffentliches Issue melden, sondern priva
 | Sicherheits-Header (HSTS, nosniff, X-Frame-Options, Referrer/Permissions-Policy) | ✅ |
 | Open-Redirect-Schutz (`next`-Parameter), Server-Action-Origin-Prüfung (Next.js) | ✅ |
 | Telemetrie von Better Auth und Next.js deaktiviert | ✅ |
-| Nonce-basierte CSP | ⏳ offen |
-| Rate Limiting: aktuell Better Auth im Arbeitsspeicher (pro Instanz) → Redis | ⏳ offen |
-| MFA (TOTP) für Inhaber/Admins | ⏳ offen, Pflicht vor Go-live |
-| Secret-Scanning und Dependency-Audit in der CI | ⏳ offen |
+| Nonce-basierte CSP (`script-src 'nonce-…' 'strict-dynamic'`, `frame-ancestors 'none'`) | ✅ (E2E prüft Header und Verstöße) |
+| Rate Limiting über Redis: Login 10/min, 2FA 10/min, Backup-Codes 5/min, API 120/min pro Schlüssel; bei Redis-Ausfall fail-closed | ✅ |
+| Zwei-Faktor (TOTP + Backup-Codes) für alle Nutzer, Hinweis für Inhaber/Admins | ✅ · Erzwingen per Tenant-Einstellung ⏳ offen |
+| Secret-Scanning (gitleaks) und Dependency-Audit (high/critical) in der CI | ✅ |
+| API-Schlüssel: nur SHA-256-Hash, Rechte = Schlüssel ∩ aktueller Ersteller, keine Schlüsselverwaltung/Löschrechte | ✅ Integrationstests |
+
+Bekannte Einschränkung: `style-src` erlaubt `'unsafe-inline'` (Animationen setzen Inline-Styles). Skripte bleiben strikt nonce-gebunden.
 
 Bekannte Datenverarbeitung: Better Auth speichert IP-Adresse und User-Agent in `Session` (Sicherheitszweck, Löschung mit Ablauf der Session). In `AuditLog` wird nur ein gesalzener Hash der IP gespeichert.
 

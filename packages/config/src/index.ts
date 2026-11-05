@@ -9,7 +9,11 @@ const serverEnvSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     DATABASE_URL: z.url(),
-    REDIS_URL: z.url().optional(),
+    REDIS_URL: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v : undefined))
+      .pipe(z.url().optional()),
     BETTER_AUTH_SECRET: z.string().min(32, 'BETTER_AUTH_SECRET muss mindestens 32 Zeichen haben'),
     APP_URL: z.url(),
     SMTP_URL: z
@@ -20,6 +24,13 @@ const serverEnvSchema = z
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   })
   .superRefine((env, ctx) => {
+    if (env.NODE_ENV === 'production' && !env.REDIS_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['REDIS_URL'],
+        message: 'REDIS_URL ist in Produktion Pflicht (instanzübergreifendes Rate Limiting).',
+      });
+    }
     if (env.NODE_ENV === 'production' && !env.SMTP_URL) {
       ctx.addIssue({
         code: 'custom',

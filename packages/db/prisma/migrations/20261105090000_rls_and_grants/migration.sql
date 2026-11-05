@@ -107,5 +107,10 @@ CREATE OR REPLACE FUNCTION onyx_invitation_lookup(p_token_hash text)
 REVOKE ALL ON FUNCTION onyx_invitation_lookup(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION onyx_invitation_lookup(text) TO onyx_app;
 
--- Prisma-Metadaten sind für die App tabu.
-REVOKE ALL ON "_prisma_migrations" FROM onyx_app;
+-- Prisma-Metadaten sind für die App tabu (Tabelle fehlt in der Shadow-DB von `migrate dev`).
+DO $$
+BEGIN
+  IF to_regclass('public._prisma_migrations') IS NOT NULL THEN
+    REVOKE ALL ON "_prisma_migrations" FROM onyx_app;
+  END IF;
+END $$;

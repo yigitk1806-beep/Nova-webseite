@@ -8,7 +8,7 @@
 | Phase | Titel | Ergebnis | Status |
 |---|---|---|---|
 | 0 | Audit & Architektur | Diese Dokumente | ✅ erledigt (zur Freigabe) |
-| 1 | Fundament: Core, Tenancy, Auth, Permissions, Audit | Lauffähige, sichere, mandantenfähige Basis ohne KI | 🟡 Kern umgesetzt, Reste offen (siehe unten) |
+| 1 | Fundament: Core, Tenancy, Auth, Permissions, Audit | Lauffähige, sichere, mandantenfähige Basis ohne KI | ✅ umgesetzt (offen: MFA-Pflicht pro Tenant, s. u.) |
 | 2 | Agent Engine (MVP) | Ein echter Agent mit READ-Tools, Run-Protokoll, Kostenerfassung | geplant |
 | 3 | Approvals & Workflow Engine | Freigabe-Flow, DAG-Workflows, Trigger | geplant |
 | 4 | Integration Layer & n8n | Connector-Framework, verschlüsselte Credentials, n8n-Brücke, 1–2 echte Integrationen | geplant |
@@ -103,11 +103,16 @@ Entscheidungen: Better Auth (nur Authentifizierung, eigene Tenancy), Hosting con
 - [x] Worker-Skelett (BullMQ, Selbsttest, Graceful Shutdown)
 - [x] Abnahmekriterien 1.8: 29 Tests (davon 12 Integrationstests gegen Postgres) + manueller End-to-End-Browserlauf
 
-**Offen in Phase 1**
-- [ ] API-Schlüssel verwalten (Modell vorhanden, keine UI/Endpunkte)
-- [ ] Rollen bearbeiten in der UI (Service `updateRole` vorhanden)
-- [ ] Playwright-E2E-Tests ins Repository und in die CI übernehmen
-- [ ] Nonce-CSP, Redis-basiertes Rate Limiting, MFA (siehe SECURITY.md §6)
+**Nachgezogen (zweiter Durchgang)**
+- [x] API-Schlüssel: Verwaltung in der UI, REST-API `/api/v1/members` und `/api/v1/audit` mit Bearer-Auth, Rechte = Schlüssel ∩ aktueller Ersteller
+- [x] Eigene Rollen in der UI bearbeiten
+- [x] Playwright-E2E-Tests (Tenant-Flow, API-Schlüssel, 2FA) mit echtem SMTP-Empfänger, in der CI
+- [x] Nonce-basierte CSP, Redis-Rate-Limiting (API + Login-Endpunkte), Zwei-Faktor-Anmeldung (TOTP + Backup-Codes)
+- [x] CI: Dependency-Audit (high/critical) und Secret-Scanning (gitleaks)
+
+**Offen**
+- [ ] 2FA-Pflicht für Inhaber/Admins als Tenant-Einstellung erzwingen (aktuell Hinweisbanner)
+- [ ] OpenAPI-Beschreibung der REST-API
 
 ## Offene Entscheidungen (ursprünglich, jetzt entschieden)
 
