@@ -103,3 +103,4 @@ export function canGrant(actorPermissions: readonly string[], target: readonly s
 export function intersectPermissions(a: readonly string[], b: readonly string[]): Permission[] {
   return toPermissions(a.filter((p) => b.includes(p)));
 }
+export * from './apikeys.ts';

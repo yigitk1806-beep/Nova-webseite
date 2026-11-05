@@ -147,12 +147,12 @@ describe('Einladungen & Rollen', () => {
 
   it('der letzte Inhaber kann nicht entfernt oder herabgestuft werden', async () => {
     const aliceAccess = await resolveTenantAccess(alice.id, tenantA.slug);
-    await expect(removeMember(aliceAccess, aliceAccess.membershipId)).rejects.toBeInstanceOf(
+    await expect(removeMember(aliceAccess, aliceAccess.membershipId!)).rejects.toBeInstanceOf(
       ConflictError,
     );
     await expect(
       changeMemberRole(aliceAccess, {
-        membershipId: aliceAccess.membershipId,
+        membershipId: aliceAccess.membershipId!,
         roleId: SYSTEM_ROLE_IDS.admin,
       }),
     ).rejects.toBeInstanceOf(ConflictError);

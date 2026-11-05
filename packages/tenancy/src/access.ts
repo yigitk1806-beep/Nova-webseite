@@ -1,16 +1,22 @@
 import { recordAudit, type AuditContext } from '@onyx/audit';
-import { ForbiddenError, NotFoundError } from '@onyx/core';
+import { ForbiddenError, NotFoundError, type ActorRef } from '@onyx/core';
 import { withTenant, withUser } from '@onyx/db';
 import { hasPermission, toPermissions, type Permission } from '@onyx/permissions';
 
-/** Aufgelöster, geprüfter Zugriff eines Nutzers auf einen Tenant. */
+/**
+ * Aufgelöster, geprüfter Zugriff auf einen Tenant.
+ * actor = wer handelt (Nutzer oder API-Schlüssel), userId = verantwortlicher Mensch
+ * (bei API-Schlüsseln der Ersteller).
+ */
 export interface TenantAccess {
   tenantId: string;
   tenantSlug: string;
   tenantName: string;
+  actor: ActorRef;
   userId: string;
-  membershipId: string;
-  roleId: string;
+  /** Nur bei Nutzerzugriff gesetzt. */
+  membershipId: string | null;
+  roleId: string | null;
   roleKey: string;
   permissions: Permission[];
   requestId: string | null;
@@ -20,7 +26,7 @@ export interface TenantAccess {
 export function auditContext(access: TenantAccess): AuditContext {
   return {
     tenantId: access.tenantId,
-    actor: { type: 'USER', id: access.userId },
+    actor: access.actor,
     requestId: access.requestId,
     ipHash: access.ipHash,
   };
@@ -56,6 +62,7 @@ export async function resolveTenantAccess(
     tenantId: tenant.id,
     tenantSlug: tenant.slug,
     tenantName: tenant.name,
+    actor: { type: 'USER', id: userId },
     userId,
     membershipId: membership.id,
     roleId: membership.role.id,

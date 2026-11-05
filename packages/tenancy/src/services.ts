@@ -290,7 +290,7 @@ export async function changeMemberRole(access: TenantAccess, input: unknown) {
 }
 
 export async function removeMember(access: TenantAccess, membershipId: string) {
-  const isSelf = membershipId === access.membershipId;
+  const isSelf = access.actor.type === 'USER' && membershipId === access.membershipId;
   if (!isSelf) {
     await requirePermission(access, 'member:remove', {
       action: 'member.removed',
@@ -368,7 +368,7 @@ export async function inviteMember(access: TenantAccess, input: unknown) {
         email: data.email,
         roleId: role.id,
         tokenHash: hashToken(token),
-        invitedById: access.userId,
+        invitedById: access.actor.id,
         expiresAt: new Date(Date.now() + INVITATION_TTL_MS),
       },
     });
